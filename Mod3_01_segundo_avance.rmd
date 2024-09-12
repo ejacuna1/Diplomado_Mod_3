@@ -1,0 +1,454 @@
+---
+title: "R Notebook"
+output: html_notebook
+editor_options: 
+  chunk_output_type: console
+---
+```{r}
+install.packages("pak")
+install.packages("pkgbuild")
+```
+
+```{r}
+paqs_cran <- c("tidyverse", "ggthemes", "cowplot", "ggdist", "ggh4x", "ggpubr", "ggrepel", "see", "ggdist", "paletteer", "showtext", "ggtext", "treemapify", "ggpointdensity", "ggridges", "styler", "patchwork", "DataExplorer", "gt", "plotly", "viridis")
+pak::pak(paqs_cran)
+
+paqs_github <- c("hrbrmstr/hrbrthemes", "hrbrmstr/ggalt","ggobi/ggally", "ricardo-bion/ggradar", "const-ae/ggupset", "kassambara/ggcorrplot", "davidsjoberg/ggsankey", "gavinsimpson/ggvegan", "strengejacke/sjPlot")
+pak::pak(paqs_github)
+```
+
+```{r}
+library(tidyverse)
+library(hrbrthemes)
+library(ggsankey)
+library(patchwork)
+library(ggpubr)
+library(ggtext)
+library(showtext)
+library(paletteer)
+library(ggrepel)
+library(GGally)
+library(ggcorrplot)
+library(ggpointdensity)
+library(DataExplorer)
+library(treemapify)
+library(plotly)
+library(viridis)
+```
+
+```{r}
+cwd2 <- read_csv("bases/cwd2.csv")
+lake <- read_csv("bases/Wudalianchi_Lake_data.csv")
+```
+
+```{r}
+# "bases/cwd2.csv"
+cwd2 <- read_csv(file.choose())
+
+# "bases/Wudalianchi_Lake_data.csv"
+lake <- read_csv(file.choose())
+```
+
+# 1. Una variable
+
+## 1.1. Una Variable Cualitativa
+
+### 1.1.A. Mostrar Ranking
+
+```{r barras simples}
+# Comentar varias líneas a la vez con Control + Shift + C
+
+cwd2 %>% 
+  ggplot(aes(x = Year)) + 
+  geom_bar()
+
+cwd2 %>% 
+  ggplot(aes(x = Year)) + 
+  geom_bar(stat = "count")
+
+cwd2 %>% count(Year)
+
+cwd2 %>% 
+  count(Year) %>% 
+  ggplot(aes(x = Year, y = n)) + 
+  geom_bar(stat = "identity", 
+           colour = "darkgreen",
+           fill = "#509511", lwd = 1)
+
+
+# Cómo volver interactivo a un gráfico de ggplot2
+pp <- cwd2 %>% 
+  count(Year) %>% 
+  ggplot(aes(x = Year, y = n)) + 
+  geom_bar(stat = "identity", 
+           colour = "#054efa",
+           fill = "#bdd0ff", lwd = 1)
+
+library(plotly)
+ggplotly(pp)
+
+# Cómo guardar un gráfico en mi proyecto
+# png, jpg, svg
+ggsave(filename = "figs/barras simples.png", plot = pp, width = 18, height = 14, units = "cm", dpi = 600, bg = "white")
+
+ggsave(filename = "figs/barras simples.jpg", plot = pp, width = 18, height = 14, units = "cm", dpi = 600, bg = "white")
+
+ggsave(filename = "figs/barras simples.svg", plot = pp, width = 18, height = 14, units = "cm", dpi = 600, bg = "white")
+
+```
+
+```{r treemap}
+
+cwd2 %>% 
+  count(LandslideID) %>%  
+  ggplot(aes(area = n, fill = LandslideID)) +
+  geom_treemap(show.legend = FALSE) +
+  geom_treemap_text(aes(label = 
+                          paste0(LandslideID, "\n(" , n, ")")),
+                    color = "white", place = "centre")
+
+# ---- HABLAR DE COLOR 
+pak::pak(c("RColorBrewer", "scales", "ggdark"))
+library(RColorBrewer)
+library(scales)
+library(ggdark)
+
+# Obtener colores hexadecimales y mostrarlos
+brewer.pal(15, "Set3") %>% show_col()
+
+pal1 <- brewer.pal(15, "Set3")  
+
+# Expandir los colores de 12 a más según se requiera
+colorRampPalette(pal1)
+my_palette <- colorRampPalette(brewer.pal(15, "Set3"))(18)
+show_col(my_palette)
+
+# Oscurecer los colores de mi paleta para usarlos 
+# como color de texto:
+
+my_palett_dark <- adjustcolor(my_palette, red.f = 0.3, green.f = 0.3, blue.f = 0.3)
+show_col(my_palett_dark)
+
+
+# ------ TREEMAP MEJORADO
+# Nivel 1
+cwd2 %>% 
+  count(LandslideID) %>%  
+  ggplot(aes(area = n, fill = LandslideID)) +
+  geom_treemap(show.legend = FALSE) +
+  geom_treemap_text(aes(label = 
+                          paste0(LandslideID, "\n(" , n, ")")),
+                    color = "gray20", place = "centre") +
+  scale_fill_manual(values = my_palette)
+
+# Nivel 2
+cwd2 %>% 
+  count(LandslideID) %>%  
+  ggplot(aes(area = n, fill = LandslideID, color = LandslideID)) +
+  geom_treemap(show.legend = FALSE) +
+  geom_treemap_text(aes(label = 
+                          paste0(LandslideID, "\n(" , n, ")")), 
+                    place = "centre", grow = T) +
+  scale_fill_manual(values = my_palette) + 
+  scale_color_manual(values = my_palette_dark)
+
+# Nivel 3
+library(ggtext)
+library(showtext)
+font_add_google(name = "Noto Sans", family = "Noto Sans")
+showtext_auto()
+
+font_add_google(name = "Open Sans", family = "Opens Sans")
+showtext_auto()
+
+# pak::pak("paletteer")
+library(paletteer)
+palet2 <- paletteer_d("Redmonder::qMSOGnYl")
+
+
+cwd2 %>% 
+  count(LandslideID, Zone) %>%  
+  mutate(Zone = case_when(
+    Zone == "Initiation" ~ "I",
+    Zone == "Transport" ~ "T",
+    Zone == "Deposition" ~ "D",
+    Zone == "Lower" ~ "L",
+    Zone == "Upper" ~ "U",
+    Zone == "Middle" ~ "M"
+  )) %>% 
+  ggplot(aes(area = n, fill = Zone, subgroup = Zone)) +
+  geom_treemap(show.legend = T) +
+  geom_treemap_text(aes(label = 
+                          paste0(LandslideID, "\n(" , n, ")")), 
+                    place = "centre", grow = T, 
+                    family = "Open Sans", color = "white") +
+  scale_fill_manual(values = palet2[-1]) +
+  labs(title = "Cantidad de réplicas según tipo de descomposición",
+       subtitle = "En la región del sur de Japón (Kanto)",
+       caption = "Fuente: Kanto et al. (2024)",
+       fill = "Zona evaluada") +
+  theme_ft_rc() + 
+  theme(legend.position = "bottom") + # top, bottom, left, right, c()
+  guides(fill = guide_legend(nrow = 1)) 
+
+
+show_col(palet2[2:8])
+show_col(palet2[-1])
+
+cwd2 %>% 
+  count(LandslideID, Zone) %>% pull(Zone) %>% unique()
+  
+```
+
+## 1.2. Una Variable Cuantitativa
+
+### 1.2.A. Mostrar Distribución
+
+
+```{r histograma}
+cwd2 %>% 
+  ggplot(aes(x = Da_cm))+
+  geom_histogram(binwidth = 5)
+
+cwd2 %>% 
+  ggplot(aes(x = Da_cm))+
+  geom_histogram(bins = 5)
+
+cwd2 %>% 
+  ggplot(aes(x = Da_cm))+
+  geom_histogram(color = "#fc0559", fill="#ffcffa", lwd = 1)
+
+cwd2 %>% 
+  ggplot(aes(x = Da_cm))+
+  geom_histogram(fill = "#fc0559", color = "transparent", 
+                 lwd = 1, alpha = 0.5)
+
+# Usemos una columna de agrupamiento
+# Y aplicaremos rellenado por grupo y facetas
+str(cwd2)
+
+cwd2 %>% 
+  mutate(Decay = as.factor(Decay)) %>% 
+  ggplot(aes(x = Da_cm, fill = Decay))+
+  geom_histogram() +
+  facet_wrap(~Decay)
+
+cwd2 %>% 
+  mutate(Decay = as.factor(Decay)) %>% 
+  ggplot(aes(x = Da_cm, fill = Decay))+
+  geom_histogram() +
+  facet_grid(.~Decay)
+
+cwd2 %>% 
+  mutate(Decay = as.factor(Decay)) %>% 
+  ggplot(aes(x = Da_cm, fill = Decay))+
+  geom_histogram() +
+  facet_grid(Decay~.)
+
+# Nivel 2
+cwd2 %>% 
+  mutate(Decay = as.factor(Decay)) %>% 
+  ggplot(aes(x = Da_cm, fill = Decay))+
+  geom_histogram() +
+  facet_wrap(~Decay) + 
+  theme_pubclean()
+
+# Nivel 3
+cwd2 %>% 
+  mutate(Decay = as.factor(Decay)) %>% 
+  ggplot(aes(x = Da_cm, fill = Decay))+
+  geom_histogram() +
+  facet_wrap(~Decay) + 
+  theme_pubclean()+
+  theme(panel.grid.major.y = element_blank())+
+  theme(strip.background = element_rect(fill = "black"),
+        strip.text = element_text(color = "white", size = 14,
+                                  face = 2))
+
+# Nivel 4
+palet3 <- paletteer_d("LaCroixColoR::Mango")
+show_col(palet3)
+
+cwd2 %>% 
+  mutate(Decay = as.factor(Decay)) %>% 
+  ggplot(aes(x = Da_cm, fill = Decay))+
+  geom_histogram() +
+  facet_grid(Decay ~ .) + 
+  theme_pubclean() +
+  scale_fill_manual(values = palet3) +
+  theme(panel.grid.major.y = element_blank()) +
+  labs(title = "Distribución del diámetro (Da_cm)",
+       subtitle = "Datos de deslizamiento de tierra en Japón",
+       x = "Diámetro (cm)",  y = "Frecuencia")+
+  theme(plot.title = element_text(face = 2, size = 20),
+        plot.subtitle = element_text(size = 16))
+# AÑADIR GRÁFICO DE PARETO
+```
+
+
+```{r función de densidad}
+font_add_google(name = "Roboto", family = "Roboto")
+showtext_auto()
+
+cwd2 %>% 
+  mutate(Decay = as.factor(Decay)) %>% 
+  ggplot(aes(x = Da_cm, fill = Decay))+
+  geom_density() +
+  facet_grid(Decay ~ .) + 
+  theme_pubclean() +
+  scale_fill_manual(values = palet3) +
+  theme(panel.grid.major.y = element_blank()) +
+  labs(title = "Distribución del diámetro (Da_cm)",
+       subtitle = "Datos de deslizamiento de tierra en Japón",
+       x = "Diámetro (cm)",  y = "Frecuencia")+
+  theme(plot.title = element_text(face = 2, size = 20),
+        plot.subtitle = element_text(size = 16))+
+  theme(text = element_text(family = "Roboto"))
+
+
+
+# ----  Nuevo gráfico de densidad con
+# Geométrica vline y anotaciones
+
+
+medianas <- cwd2 %>% 
+  group_by(type) %>% 
+  summarize(mediana = median(Da_cm)) %>% 
+  as.data.frame()
+
+
+densidad1 <- cwd2 %>%
+  mutate(type = case_when(
+    type == "downed log" ~ "Tronco derribado",
+    type == "snag" ~ "Leña"
+  )) %>% 
+  ggplot(aes(x = Da_cm, fill = type, color = type)) +
+  geom_density(alpha = 0.35, lwd=1) +
+  geom_vline(xintercept = medianas[1,2], 
+             color = "#e6003d",
+             lwd = 0.6, lty = 2) +
+  geom_vline(xintercept = medianas[2,2], 
+             color = "#4500e6",
+             lwd = 0.6, lty = 2) +
+  labs(
+    title = "Densidad del Diámetro Mayor por Tipo de Madera",
+    subtitle = "Comparación de la distribución del diámetro por tipo de madera",
+    color = "Tipo",
+    fill = "Tipo",
+    x = "Diámetro Mayor (cm)",
+    y = "Densidad"
+  ) 
+
+
+densidad1 +
+  scale_fill_manual(values = c("#4500e6", "#e6003d"))+
+  scale_color_manual(values = c("#4500e6", "#e6003d"))+
+  theme_classic()+
+  theme(plot.title = element_text(size = 20, face = 2),
+        legend.title = element_text(face = 2),
+        legend.position = c(0.8, 0.4),
+        text = element_text(family = "Noto Sans")) +
+  theme(legend.background = element_blank())+
+  annotate("text", x = 15.8, y = 0.079, 
+           color = "gray60", size = 4, 
+           angle = 0, fontface = 3,  hjust = 0,
+           lineheight = 0.7, family = "Noto Sans",
+           label = "La diferencia\nde medianas\nes baja") + 
+  # coord_flip()
+  coord_trans(clip = "off")
+
+```
+
+```{r boxplot}
+cwd2 %>% 
+  ggplot(aes(y = Da_cm, x = Zone))+
+  geom_boxplot() +
+  geom_jitter(width = 0.1, height = 0.1,
+              alpha = 0.5, size = 4,
+              aes(color = Zone))
+
+```
+
+```{r violin}
+cwd2 %>% 
+  ggplot(aes(y = Da_cm, x = Zone))+
+  geom_violin()
+
+```
+
+### 1.2.B. Mostrar Tendencia
+
+```{r lineas}
+
+```
+
+```{r area}
+
+```
+
+# 2. Dos variables
+
+## 2.1. Dos variables, ambas cualitativas
+
+### 2.1.A. Mostrar ranking
+
+```{r barras apiladas}
+
+```
+
+```{r barras agrupadas}
+
+```
+
+```{r barras proporcion}
+
+```
+
+```{r sankey}
+
+```
+
+### 2.1.B. Mostrar asociación
+
+```{r, radar}
+
+```
+
+## 2.2. Dos variables, una cuantitativa y una cualitativa
+
+### 2.2.A. Distribución comparativa
+
+```{r boxplot comparativo}
+cwd2 %>% 
+  mutate(Decay = as.factor(Decay)) %>% 
+  ggplot(aes(y = Da_cm, x = Decay))+
+  geom_boxplot()
+
+pak::pak("ggstatsplot")
+```
+
+```{r streamchart}
+
+```
+
+```{r ridgeline}
+
+```
+
+## 2.3. Dos variables, ambas cuantitativas
+
+### 2.3.A. Correlación y regresión
+
+```{r scatterplot}
+
+```
+
+```{r densidad 2D}
+
+```
+
+
+```{r correlograma}
+
+```
+

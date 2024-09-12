@@ -1,0 +1,191 @@
+---
+title: "R Notebook"
+output: html_notebook
+editor_options: 
+  chunk_output_type: console
+---
+```{r}
+install.packages("pak")
+install.packages("pkgbuild")
+```
+
+```{r}
+paqs_cran <- c("tidyverse", "ggthemes", "cowplot", "ggdist", "ggh4x", "ggpubr", "ggrepel", "see", "ggdist", "paletteer", "showtext", "ggtext", "treemapify", "ggpointdensity", "ggridges", "styler", "patchwork", "DataExplorer", "gt", "plotly", "viridis")
+pak::pak(paqs_cran)
+
+paqs_github <- c("hrbrmstr/hrbrthemes", "hrbrmstr/ggalt","ggobi/ggally", "ricardo-bion/ggradar", "const-ae/ggupset", "kassambara/ggcorrplot", "davidsjoberg/ggsankey", "gavinsimpson/ggvegan", "strengejacke/sjPlot")
+pak::pak(paqs_github)
+```
+
+```{r}
+library(tidyverse)
+library(hrbrthemes)
+library(ggsankey)
+library(patchwork)
+library(ggpubr)
+library(ggtext)
+library(showtext)
+library(paletteer)
+library(ggrepel)
+library(GGally)
+library(ggcorrplot)
+library(ggpointdensity)
+library(DataExplorer)
+library(treemapify)
+library(plotly)
+library(viridis)
+```
+
+```{r}
+cwd2 <- read_csv("bases/cwd2.csv")
+lake <- read_csv("bases/Wudalianchi_Lake_data.csv")
+```
+
+```{r}
+# "bases/cwd2.csv"
+cwd2 <- read_csv(file.choose())
+
+# "bases/Wudalianchi_Lake_data.csv"
+lake <- read_csv(file.choose())
+```
+
+# 1. Una variable
+
+## 1.1. Una Variable Cualitativa
+
+### 1.1.A. Mostrar Ranking
+
+```{r barras simples}
+# Comentar varias líneas a la vez con Control + Shift + C
+
+cwd2 %>% 
+  ggplot(aes(x = Year)) + 
+  geom_bar()
+
+cwd2 %>% 
+  ggplot(aes(x = Year)) + 
+  geom_bar(stat = "count")
+
+cwd2 %>% count(Year)
+
+cwd2 %>% 
+  count(Year) %>% 
+  ggplot(aes(x = Year, y = n)) + 
+  geom_bar(stat = "identity", 
+           colour = "darkgreen",
+           fill = "#509511", lwd = 1)
+
+
+cwd2 %>% 
+  count(Year) %>% 
+  ggplot(aes(x = Year, y = n)) + 
+  geom_bar(stat = "identity", 
+           colour = "#054efa",
+           fill = "#bdd0ff", lwd = 1)
+
+```
+
+```{r treemap}
+
+cwd2 %>% 
+  count(LandslideID) %>%  
+  ggplot(aes(area = n, fill = LandslideID)) +
+  geom_treemap(show.legend = FALSE) +
+  geom_treemap_text(aes(label = 
+                          paste0(LandslideID, "\n(" , n, ")")),
+                    color = "white", place = "centre")
+
+```
+
+## 1.2. Una Variable Cuantitativa
+
+### 1.2.A. Mostrar Distribución
+
+
+```{r histograma}
+
+```
+
+```{r función de densidad}
+
+```
+
+```{r boxplot}
+
+```
+
+```{r violin}
+
+```
+
+### 1.2.B. Mostrar Tendencia
+
+```{r lineas}
+
+```
+
+```{r area}
+
+```
+
+# 2. Dos variables
+
+## 2.1. Dos variables, ambas cualitativas
+
+### 2.1.A. Mostrar ranking
+
+```{r barras apiladas}
+
+```
+
+```{r barras agrupadas}
+
+```
+
+```{r barras proporcion}
+
+```
+
+```{r sankey}
+
+```
+
+### 2.1.B. Mostrar asociación
+
+```{r, radar}
+
+```
+
+## 2.2. Dos variables, una cuantitativa y una cualitativa
+
+### 2.2.A. Distribución comparativa
+
+```{r boxplot comparativo}
+
+```
+
+```{r streamchart}
+
+```
+
+```{r ridgeline}
+
+```
+
+## 2.3. Dos variables, ambas cuantitativas
+
+### 2.3.A. Correlación y regresión
+
+```{r scatterplot}
+
+```
+
+```{r densidad 2D}
+
+```
+
+
+```{r correlograma}
+
+```
+
